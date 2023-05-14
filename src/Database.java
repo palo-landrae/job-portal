@@ -14,7 +14,7 @@ public class Database {
                 String.format("VALUES ('%s', '%s', '%s', '%s', %d, %d)",
                         j.getJobTitle(), j.getCompany(), j.getLocation(),
                         j.getJobType(), j.getSalaryMin(), j.getSalaryMax());
-        String query2 = "SELECT LAST_INSERT_ID()";
+        String query2 = "SELECT MAX(id) as id FROM jobs";
         try {
             Statement st1 = conn.createStatement();
             st1.executeUpdate(query1);
@@ -23,7 +23,7 @@ public class Database {
             Statement st2 = conn.createStatement();
             ResultSet rs = st2.executeQuery(query2);
             while (rs.next())
-                lastIndex = rs.getInt("LAST_INSERT_ID()");
+                lastIndex = rs.getInt("id");
             rs.close();
             st2.close();
             System.out.println("Successfully inserted to database with ID = " + lastIndex);
@@ -52,12 +52,12 @@ public class Database {
         String query = String.format(
                 "UPDATE jobs SET job_title = '%s', company = '%s', location = '%s', job_type = '%s', salary_min = %d, salary_max = %d WHERE id = %d",
                 j.getJobTitle(), j.getCompany(), j.getLocation(),
-                j.getJobType(), j.getSalaryMin(), j.getSalaryMax(), (id + 1));
+                j.getJobType(), j.getSalaryMin(), j.getSalaryMax(), id);
         try {
             Statement st = conn.createStatement();
             st.executeUpdate(query);
             st.close();
-            System.out.println("Updated record at ID = " + (id + 1));
+            System.out.println("Updated record at ID = " + id);
         } catch (SQLException e) {
             System.err.println("Got an exception!");
             System.err.println(e.getMessage());
@@ -89,9 +89,9 @@ public class Database {
     public static Connection getConnection() throws SQLException {
         Dotenv dotenv = Dotenv.load();
 
-        String url = dotenv.get("SQL_URL");
-        String username = dotenv.get("SQL_USERNAME");
-        String password = dotenv.get("SQL_PASSWORD");
+        String url = dotenv.get("SUPABASE_URL");
+        String username = dotenv.get("SUPABASE_USERNAME");
+        String password = dotenv.get("SUPABASE_PASSWORD");
 
         Connection conn = DriverManager.getConnection(url, username, password);
         System.out.println("Connection successful!\n");

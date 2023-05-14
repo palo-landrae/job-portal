@@ -2,6 +2,8 @@ package src;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 
 import models.Job;
 import java.util.*;
@@ -25,6 +27,22 @@ public class JobTable extends JFrame implements ActionListener {
         String[] columns = Job.getColumnNames();
         model = new DefaultTableModel(columns, 0);
         table = new JTable(model);
+
+        TableRowSorter<TableModel> sorter = new TableRowSorter<>(model);
+        table.setRowSorter(sorter);
+
+        sorter.setComparator(0, intComparator);
+        sorter.setComparator(5, intComparator);
+        sorter.setComparator(6, intComparator);
+
+        // Add a MouseListener to the table headers to detect when a column is clicked
+        table.getTableHeader().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int columnIndex = table.columnAtPoint(e.getPoint());
+                sorter.toggleSortOrder(columnIndex);
+            }
+        });
 
         for (Job row : jobs) {
             model.addRow(row.toArray());
@@ -50,6 +68,13 @@ public class JobTable extends JFrame implements ActionListener {
         buttonPanel.add(refreshButton);
         getContentPane().add(buttonPanel, BorderLayout.SOUTH);
     }
+
+    Comparator<Integer> intComparator = new Comparator<Integer>() {
+        @Override
+        public int compare(Integer i1, Integer i2) {
+            return i1.compareTo(i2);
+        }
+    };
 
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == addButton) {
@@ -103,9 +128,9 @@ public class JobTable extends JFrame implements ActionListener {
                 if (result == JOptionPane.OK_OPTION) {
                     // Update the selected job in the table
                     Job newJob = new Job(rowIndex, textFields[1].getText(), textFields[2].getText(),
-                        textFields[3].getText(),
-                        textFields[4].getText(), Integer.parseInt(textFields[5].getText()),
-                        Integer.parseInt(textFields[6].getText()));
+                            textFields[3].getText(),
+                            textFields[4].getText(), Integer.parseInt(textFields[5].getText()),
+                            Integer.parseInt(textFields[6].getText()));
 
                     Database.updateJob(conn, rowIndex, newJob);
                     for (int i = 1; i < jobFields.length; i++) {
@@ -116,6 +141,11 @@ public class JobTable extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(this, "Please select a job to update.");
             }
         } else if (e.getSource() == refreshButton) {
+            ArrayList<Job> jobs = Database.getData(conn);
+            model.setRowCount(0);
+            for (Job row : jobs) {
+                model.addRow(row.toArray());
+            }
             model.fireTableDataChanged();
         }
 
